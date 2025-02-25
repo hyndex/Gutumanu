@@ -1,0 +1,19 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tracking Active</title>
+  <link rel="stylesheet" href="{% static 'tracking/css/styles.css' %}">
+  <script src="{% static 'tracking/js/tracking.js' %}"></script>
+</head>
+<body>
+  <h1>Tracking is Active</h1>
+  <p>This page is actively capturing tracking data including location, device info, sensor data, and permission statuses.</p>
+  <div class="info">
+    <p>Please keep this page open to ensure that tracking data is sent reliably. If you close or navigate away, tracking may pause until you return.</p>
+    <p>If any permissions are not granted, the system will run with the available data.</p>
+  </div>
+</body>
+</html>

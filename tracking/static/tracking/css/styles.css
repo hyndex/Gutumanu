@@ -1,0 +1,22 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 2rem;
+    background: #f9f9f9;
+    color: #333;
+  }
+  
+  h1 {
+    color: #0055a5;
+  }
+  
+  p {
+    font-size: 1.1rem;
+  }
+  
+  .info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #eaeaea;
+    border-left: 4px solid #0055a5;
+  }
+  
