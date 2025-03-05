@@ -1,0 +1,52 @@
+# General
+.DS_Store
+*.log
+
+# Node/Expo
+node_modules/
+npm-debug.log*
+
+# Expo
+.expo/
+.expo-shared/
+
+# Android/iOS
+android/build/
+android/app/build/
+ios/build/
+derivedData/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+coverage/
+
+# Packages
+jspm_packages/
+
+# Debug
+*.keystore
+*.jks
+
+# Metro/Bundler
+*.hot-update.json
+
+# Bundle
+*.jsbundle
+
+# macOS
+._*
+
+# Windows
+Thumbs.db
+
+# Yarn
+yarn-debug.log*
+yarn-error.log*
+.pnp.*

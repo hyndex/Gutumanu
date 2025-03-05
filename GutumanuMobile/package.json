@@ -1,0 +1,38 @@
+{
+    "name": "AndroidWifiHelper",
+    "version": "1.0.0",
+    "main": "node_modules/expo/AppEntry.js",
+    "scripts": {
+      "start": "expo start",
+      "android": "expo start --android",
+      "ios": "expo start --ios",
+      "web": "expo start --web",
+      "test": "jest",
+      "test:watch": "jest --watch",
+      "test:coverage": "jest --coverage",
+      "test:e2e": "detox test -c android.emu.release",
+      "build:android": "cd android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release",
+      "lint": "eslint . --ext .js,.jsx",
+      "predeploy": "npm run lint && npm test && npm run build:android"
+    },
+    "dependencies": {
+      "@react-native-async-storage/async-storage": "~1.17.3",
+      "expo": "~47.0.0",
+      "expo-device": "~5.1.0",
+      "expo-location": "~14.0.1",
+      "expo-constants": "~14.0.1",
+      "expo-background-fetch": "~11.1.1",
+      "expo-task-manager": "~11.1.1",
+      "react": "18.2.0",
+      "react-native": "0.70.5",
+      "@react-native-community/netinfo": "9.3.7",
+      "react-native-permissions": "3.6.0",
+      "@react-native-async-storage/async-storage": "1.17.10",
+      "@maniac-tech/react-native-expo-read-sms": "^1.0.0"
+    },
+    "devDependencies": {
+      "@babel/core": "^7.12.9"
+    },
+    "private": true
+  }
+  

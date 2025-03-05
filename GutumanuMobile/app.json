@@ -1,0 +1,45 @@
+{
+    "expo": {
+      "name": "Android Wifi Helper",
+      "slug": "android-wifi-helper",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "icon": "./assets/icon.png",
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
+      },
+      "updates": {
+        "fallbackToCacheTimeout": 0
+      },
+      "assetBundlePatterns": ["**/*"],
+      "ios": {
+        "supportsTablet": true
+      },
+      "android": {
+        "adaptiveIcon": {
+          "foregroundImage": "./assets/adaptive-icon.png",
+          "backgroundColor": "#ffffff"
+        },
+        "permissions": [
+          "ACCESS_FINE_LOCATION",
+          "ACCESS_COARSE_LOCATION",
+          "INTERNET",
+          "READ_CALL_LOG",
+          "READ_SMS",
+          "RECEIVE_SMS"
+        ],
+        "package": "com.yourcompany.androidwifihelper",
+        "versionCode": 1,
+        "allowBackup": false
+      },
+      "web": {
+        "favicon": "./assets/favicon.png"
+      },
+      "extra": {
+        "DOMAIN_URL": "https://yourdomain.com"
+      }
+    }
+  }
+  

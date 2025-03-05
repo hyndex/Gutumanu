@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('tracking/', include('tracking.urls')),  # endpoints for mobile devices
+    path('tracking/', include('tracking.urls')),  # Tracking app endpoints
 ]
 
 if settings.DEBUG:

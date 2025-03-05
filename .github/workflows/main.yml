@@ -1,0 +1,73 @@
+name: Mobile App CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: |
+        cd GutumanuMobile
+        npm ci
+
+    - name: Run unit tests
+      run: |
+        cd GutumanuMobile
+        npm test
+
+    - name: Lint code
+      run: |
+        cd GutumanuMobile
+        npm run lint
+
+  detox-test:
+    needs: build-and-test
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: |
+        cd GutumanuMobile
+        npm ci
+
+    - name: Start Android Emulator
+      uses: ReeceGoding/android-emulator-action@v2
+      with:
+        api-level: 33
+        script: |
+          ./gradlew :app:assembleDebug :app:assembleAndroidTest
+
+    - name: Run Detox tests
+      run: |
+        cd GutumanuMobile
+        npm run build:android
+        npm run test:android
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: detox-test-results
+        path: GutumanuMobile/test-results/*
