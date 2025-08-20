@@ -1,0 +1,16 @@
+syntax = "proto3";
+package gutumanu;
+
+message Telemetry {
+  string device_id = 1;
+  double latitude = 2;
+  double longitude = 3;
+}
+
+message Ack {
+  bool success = 1;
+}
+
+service IngestService {
+  rpc SendTelemetry(Telemetry) returns (Ack);
+}

@@ -39,7 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tracking'
+    'tracking',
+    'rest_framework',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -88,6 +90,7 @@ TEMPLATES = [
 ]
 
 
+ASGI_APPLICATION = 'gutumanu.asgi.application'
 WSGI_APPLICATION = 'gutumanu.wsgi.application'
 
 
@@ -145,5 +148,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
