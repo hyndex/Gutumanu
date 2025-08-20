@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  redpanda:
+    image: redpandadata/redpanda:v23.3.7
+    container_name: redpanda
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --memory 1G
+      - --overprovisioned
+      - --kafka-addr internal://0.0.0.0:9093,external://0.0.0.0:9092
+      - --advertise-kafka-addr internal://redpanda:9093,external://localhost:9092
+      - --set redpanda.enable_sasl=true
+      - --set redpanda.enable_authz=true
+      - --set redpanda.kafka_api_tls.enabled=true
+      - --set redpanda.kafka_api_tls.require_client_auth=true
+      - --set redpanda.kafka_api_tls.cert_file=/etc/redpanda/certs/server.crt
+      - --set redpanda.kafka_api_tls.key_file=/etc/redpanda/certs/server.key
+      - --set redpanda.kafka_api_tls.truststore_file=/etc/redpanda/certs/ca.crt
+    ports:
+      - "9092:9092"
+      - "9644:9644"
+    volumes:
+      - ./certs:/etc/redpanda/certs
+
+  karapace:
+    image: aiven/karapace:latest
+    depends_on:
+      - redpanda
+    environment:
+      KARAPACE_REST_HOST: 0.0.0.0
+      KARAPACE_REST_PORT: 8081
+      KARAPACE_BOOTSTRAP_URI: redpanda:9093
+      KARAPACE_SECURITY_PROTOCOL: SASL_SSL
+      KARAPACE_SASL_MECHANISM: SCRAM-SHA-256
+      KARAPACE_SASL_USERNAME: karapace
+      KARAPACE_SASL_PASSWORD: karapace-secret
+      KARAPACE_TLS_CLIENT_CERT: /etc/redpanda/certs/client.crt
+      KARAPACE_TLS_CLIENT_KEY: /etc/redpanda/certs/client.key
+      KARAPACE_TLS_CA_CERT: /etc/redpanda/certs/ca.crt
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./certs:/etc/redpanda/certs
