@@ -1,0 +1,52 @@
+version: '3.8'
+services:
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: redpanda
+    command:
+      - redpanda
+      - start
+      - --smp
+      - '1'
+      - --memory
+      - 1G
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - '0'
+      - --check=false
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092,SSL://0.0.0.0:9093
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:9092,SSL://redpanda:9093
+      - --set
+      - redpanda.enable_sasl=true
+      - --set
+      - redpanda.superusers=admin
+      - --kafka-api-ssl-key-file
+      - /etc/redpanda/certs/broker.key
+      - --kafka-api-ssl-cert-file
+      - /etc/redpanda/certs/broker.crt
+      - --kafka-api-ssl-truststore-file
+      - /etc/redpanda/certs/ca.crt
+    ports:
+      - '9092:9092'
+      - '9093:9093'
+    volumes:
+      - ./certs:/etc/redpanda/certs:ro
+
+  karapace:
+    image: aivenoy/karapace:latest
+    depends_on:
+      - redpanda
+    environment:
+      KARAPACE_BOOTSTRAP_URI: redpanda:9093
+      KARAPACE_SECURITY_PROTOCOL: SSL
+      KARAPACE_SSL_CAFILE: /etc/karapace/certs/ca.crt
+      KARAPACE_SSL_CERTFILE: /etc/karapace/certs/broker.crt
+      KARAPACE_SSL_KEYFILE: /etc/karapace/certs/broker.key
+    ports:
+      - '8081:8081'
+    volumes:
+      - ./certs:/etc/karapace/certs:ro

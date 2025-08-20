@@ -56,7 +56,7 @@ async def ingest_telemetry(
     if dedupe_count > 1:
         return JSONResponse(status_code=200, content={"status": "duplicate", "dedupe_count": dedupe_count})
 
-    producer.publish(payload.model_dump(mode="json"))
+    producer.publish(payload.model_dump(mode="json"), "telemetry")
     return {"status": "accepted"}
 
 
@@ -87,5 +87,5 @@ async def ingest_trip(
     if dedupe_count > 1:
         return JSONResponse(status_code=200, content={"status": "duplicate", "dedupe_count": dedupe_count})
 
-    producer.publish(payload.model_dump(mode="json"))
+    producer.publish(payload.model_dump(mode="json"), "trip")
     return {"status": "accepted"}

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: karapace
+spec:
+  replicas: {{ .Values.karapace.replicas }}
+  selector:
+    matchLabels:
+      app: karapace
+  template:
+    metadata:
+      labels:
+        app: karapace
+    spec:
+      containers:
+      - name: karapace
+        image: {{ .Values.karapace.image }}
+        env:
+        - name: KARAPACE_BOOTSTRAP_URI
+          value: redpanda:9093
+        - name: KARAPACE_SECURITY_PROTOCOL
+          value: SSL
+        - name: KARAPACE_SSL_CAFILE
+          value: /etc/karapace/certs/ca.crt
+        - name: KARAPACE_SSL_CERTFILE
+          value: /etc/karapace/certs/broker.crt
+        - name: KARAPACE_SSL_KEYFILE
+          value: /etc/karapace/certs/broker.key
+        ports:
+        - containerPort: 8081
+        volumeMounts:
+        - name: certs
+          mountPath: /etc/karapace/certs
+      volumes:
+      - name: certs
+        secret:
+          secretName: {{ .Values.karapace.tls.certSecret }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: karapace
+spec:
+  selector:
+    app: karapace
+  ports:
+  - name: http
+    port: 8081

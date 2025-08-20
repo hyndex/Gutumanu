@@ -1,0 +1,4 @@
+apiVersion: v2
+name: telemetry-stack
+version: 0.1.0
+description: Redpanda and Karapace with TLS enabled

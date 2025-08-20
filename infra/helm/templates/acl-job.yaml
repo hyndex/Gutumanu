@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redpanda-acl
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: acl
+        image: {{ .Values.redpanda.image }}
+        command:
+          - rpk
+          - acl
+          - create
+          - --allow-principal
+          - User:producer
+          - --operation
+          - write
+          - --topic
+          - telemetry.raw
+          - --brokers
+          - redpanda:9093
+          - --tls-enabled
+          - --user
+          - admin
+          - --password
+          - admin
+        volumeMounts:
+        - name: certs
+          mountPath: /etc/redpanda/certs
+      volumes:
+      - name: certs
+        secret:
+          secretName: {{ .Values.redpanda.tls.certSecret }}

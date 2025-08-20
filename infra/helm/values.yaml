@@ -1,0 +1,10 @@
+redpanda:
+  image: redpandadata/redpanda:latest
+  replicas: 1
+  tls:
+    certSecret: redpanda-tls
+karapace:
+  image: aivenoy/karapace:latest
+  replicas: 1
+  tls:
+    certSecret: redpanda-tls

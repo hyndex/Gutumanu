@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redpanda
+spec:
+  serviceName: redpanda
+  replicas: {{ .Values.redpanda.replicas }}
+  selector:
+    matchLabels:
+      app: redpanda
+  template:
+    metadata:
+      labels:
+        app: redpanda
+    spec:
+      containers:
+      - name: redpanda
+        image: {{ .Values.redpanda.image }}
+        command:
+          - redpanda
+          - start
+          - --smp
+          - "1"
+          - --memory
+          - 1G
+          - --reserve-memory
+          - 0M
+          - --overprovisioned
+          - --node-id
+          - "0"
+          - --check=false
+          - --kafka-addr
+          - PLAINTEXT://0.0.0.0:9092,SSL://0.0.0.0:9093
+          - --advertise-kafka-addr
+          - PLAINTEXT://redpanda:9092,SSL://redpanda:9093
+          - --set
+          - redpanda.enable_sasl=true
+          - --set
+          - redpanda.superusers=admin
+          - --kafka-api-ssl-key-file
+          - /etc/redpanda/certs/broker.key
+          - --kafka-api-ssl-cert-file
+          - /etc/redpanda/certs/broker.crt
+          - --kafka-api-ssl-truststore-file
+          - /etc/redpanda/certs/ca.crt
+        ports:
+        - containerPort: 9092
+        - containerPort: 9093
+        volumeMounts:
+        - name: certs
+          mountPath: /etc/redpanda/certs
+      volumes:
+      - name: certs
+        secret:
+          secretName: {{ .Values.redpanda.tls.certSecret }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redpanda
+spec:
+  selector:
+    app: redpanda
+  ports:
+  - name: kafka
+    port: 9092
+  - name: kafka-ssl
+    port: 9093
