@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: flink-streaming
+spec:
+  serviceName: flink-streaming
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flink-streaming
+  template:
+    metadata:
+      labels:
+        app: flink-streaming
+    spec:
+      containers:
+        - name: pyflink-job
+          image: flink:1.17
+          args: ["pyflink", "/opt/flink/usrlib/cleanse_telemetry.py"]
+          env:
+            - name: FLINK_PROPERTIES
+              value: |
+                jobmanager.rpc.address: flink-streaming-0.flink-streaming
+                state.backend: filesystem
+                state.checkpoints.dir: file:///flink-checkpoints
+                execution.checkpointing.interval: 60s
+          volumeMounts:
+            - name: checkpoint
+              mountPath: /flink-checkpoints
+  volumeClaimTemplates:
+    - metadata:
+        name: checkpoint
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
