@@ -162,6 +162,5 @@ class Migration(migrations.Migration):
         migrations.RunSQL(
             sql=CREATE_CANONICAL_SQL,
             reverse_sql=DROP_CANONICAL_SQL,
-            database='postgresql',
         ),
     ]
