@@ -1,0 +1,7 @@
+version: 2
+models:
+  - name: orders
+    description: "Sample mart demonstrating lineage"
+    columns:
+      - name: id
+        tests: [not_null]
