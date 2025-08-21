@@ -3,6 +3,9 @@ import os
 import time
 from typing import List, Optional
 
+import logging
+import os
+
 from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel
 
@@ -13,6 +16,30 @@ django.setup()
 from tracking.models import AIJob, InferenceRun  # noqa: E402
 from .kafka import ScoreSink  # noqa: E402
 
+try:  # pragma: no cover - optional observability
+    from prometheus_fastapi_instrumentator import Instrumentator
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if endpoint:
+        resource = Resource.create({"service.name": "ai_service"})
+        provider = TracerProvider(resource=resource)
+        processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint))
+        provider.add_span_processor(processor)
+        trace.set_tracer_provider(provider)
+    else:  # pragma: no cover - exporter disabled
+        FastAPIInstrumentor = None  # type: ignore
+except Exception:  # pragma: no cover
+    Instrumentator = None  # type: ignore
+    FastAPIInstrumentor = None  # type: ignore
+
+logger = logging.getLogger(__name__)
+
 try:  # pragma: no cover - optional dependency
     import ray
     from ray import serve
@@ -21,6 +48,13 @@ except Exception:  # pragma: no cover - ray not installed
 
 app = FastAPI()
 sink = ScoreSink()
+
+if 'Instrumentator' in globals() and Instrumentator:  # pragma: no cover - depends on optional pkg
+    Instrumentator().instrument(app).expose(app)
+    try:
+        FastAPIInstrumentor.instrument_app(app)
+    except Exception:
+        pass
 
 
 class InferenceRequest(BaseModel):
