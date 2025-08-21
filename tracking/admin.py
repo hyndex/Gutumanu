@@ -1,9 +1,20 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
-    Child, LocationLog, IPLog, DeviceInfoLog, PhotoCapture,
-    SensorDataLog, PermissionLog, SMSLog, CallLog, SocialMediaLog, KeyloggerLog,
-    SocialMediaMessage, AppUsage, ScreenTime, GeofenceAlert
+    Child,
+    LocationLog,
+    IPLog,
+    DeviceInfoLog,
+    PhotoCapture,
+    SensorDataLog,
+    PermissionLog,
+    SMSLog,
+    CallLog,
+    KeyloggerLog,
+    SocialMediaMessage,
+    AppUsage,
+    ScreenTime,
+    GeofenceAlert,
 )
 
 class LocationLogInline(admin.TabularInline):
@@ -68,13 +79,7 @@ class SMSLogInline(admin.TabularInline):
 class CallLogInline(admin.TabularInline):
     model = CallLog
     extra = 0
-    readonly_fields = ('timestamp', 'caller', 'callee', 'duration')
-    ordering = ('-timestamp',)
-
-class SocialMediaLogInline(admin.TabularInline):
-    model = SocialMediaLog
-    extra = 0
-    readonly_fields = ('timestamp', 'platform', 'sender', 'message')
+    readonly_fields = ('timestamp', 'number', 'type', 'duration')
     ordering = ('-timestamp',)
 
 class KeyloggerLogInline(admin.TabularInline):
@@ -90,8 +95,11 @@ class ChildAdmin(admin.ModelAdmin):
     list_filter = ('parent',)
     inlines = [
         LocationLogInline, IPLogInline, DeviceInfoLogInline, PhotoCaptureInline,
-        SensorDataLogInline, PermissionLogInline, SMSLogInline, CallLogInline,
-        SocialMediaLogInline, KeyloggerLogInline
+        SensorDataLogInline,
+        PermissionLogInline,
+        SMSLogInline,
+        CallLogInline,
+        KeyloggerLogInline,
     ]
 
     def latest_location_map_link_display(self, obj):
@@ -158,17 +166,10 @@ class SMSLogAdmin(admin.ModelAdmin):
 
 @admin.register(CallLog)
 class CallLogAdmin(admin.ModelAdmin):
-    list_display = ('child', 'timestamp', 'caller', 'callee', 'duration')
-    list_filter = ('child', 'timestamp')
+    list_display = ('child', 'timestamp', 'number', 'type', 'duration')
+    list_filter = ('child', 'timestamp', 'type')
     date_hierarchy = 'timestamp'
-    search_fields = ('child__name', 'caller', 'callee')
-
-@admin.register(SocialMediaLog)
-class SocialMediaLogAdmin(admin.ModelAdmin):
-    list_display = ('child', 'timestamp', 'platform', 'sender', 'message')
-    list_filter = ('child', 'timestamp', 'platform')
-    date_hierarchy = 'timestamp'
-    search_fields = ('child__name', 'platform', 'sender', 'message')
+    search_fields = ('child__name', 'number')
 
 @admin.register(KeyloggerLog)
 class KeyloggerLogAdmin(admin.ModelAdmin):
