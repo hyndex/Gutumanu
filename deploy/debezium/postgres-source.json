@@ -1,0 +1,14 @@
+{
+  "name": "postgres-source",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "plugin.name": "pgoutput",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "analytics",
+    "database.password": "analytics",
+    "database.dbname": "analytics",
+    "database.server.name": "analytics",
+    "slot.name": "analytics_slot"
+  }
+}

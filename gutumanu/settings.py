@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'mozilla_django_oidc',
     'authapp',
     'audit',
+    'analytics',
 ]
 
 MIDDLEWARE = [
