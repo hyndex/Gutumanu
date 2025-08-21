@@ -3,6 +3,9 @@ import re
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from rules import RuleEngine, parse_rules
+from rules import db as rules_db
+
 from . import db
 from .kafka import KafkaSink
 from .rate_limit import RateLimiter
@@ -27,6 +30,7 @@ def _parse_version(content_type: str, media: str) -> int:
 @app.on_event("startup")
 async def startup() -> None:
     db.init_db()
+    rules_db.init_db()
 
 
 @app.post("/telemetry", status_code=202)
@@ -89,3 +93,16 @@ async def ingest_trip(
 
     producer.publish(payload.model_dump(mode="json"))
     return {"status": "accepted"}
+
+
+@app.post("/v1/alerts/test")
+async def test_alerts(request: Request):
+    body = await request.json()
+    rule_src = body.get("rule")
+    payload = body.get("payload", {})
+    if not rule_src:
+        raise HTTPException(status_code=400, detail="rule is required")
+    parsed = parse_rules(rule_src)
+    engine = RuleEngine([parsed])
+    actions = engine.run(payload)
+    return {"actions": actions}
