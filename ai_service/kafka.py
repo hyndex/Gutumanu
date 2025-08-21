@@ -3,6 +3,8 @@ import logging
 import os
 from typing import Any, Dict
 
+from prometheus_client import Counter, REGISTRY
+
 try:  # pragma: no cover - optional dependency
     from kafka import KafkaProducer
 except Exception:  # pragma: no cover - fallback when kafka client missing
@@ -25,6 +27,10 @@ class ScoreSink:
                 self.producer = None
         else:  # pragma: no cover - kafka not installed
             self.producer = None
+        if "kafka_scores_published_total" in REGISTRY._names_to_collectors:
+            self._counter = REGISTRY._names_to_collectors["kafka_scores_published_total"]  # type: ignore[index]
+        else:
+            self._counter = Counter("kafka_scores_published_total", "Total score messages", ["topic"])
 
     def publish(self, data: Dict[str, Any]) -> None:
         payload = json.dumps(data).encode("utf-8")
@@ -33,5 +39,6 @@ class ScoreSink:
             return
         try:  # pragma: no cover - network interaction
             self.producer.send(self.topic, payload)
+            self._counter.labels(self.topic).inc()
         except Exception as exc:  # pragma: no cover - failure tolerated
             logger.error("Kafka publish failed: %s", exc)

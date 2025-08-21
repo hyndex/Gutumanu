@@ -5,6 +5,8 @@ import os
 import urllib.request
 from typing import Any, Dict
 
+from prometheus_client import Counter, REGISTRY
+
 try:
     from kafka import KafkaProducer
 except Exception:  # pragma: no cover - dependency optional
@@ -28,6 +30,10 @@ class KafkaSink:
                 self.producer = None
         else:  # pragma: no cover - used when kafka lib missing
             self.producer = None
+        if "kafka_telemetry_published_total" in REGISTRY._names_to_collectors:
+            self._counter = REGISTRY._names_to_collectors["kafka_telemetry_published_total"]  # type: ignore[index]
+        else:
+            self._counter = Counter("kafka_telemetry_published_total", "Telemetry messages published", ["topic"])
 
     def _register_schema(self) -> str:
         schema_dict = TelemetryV1.model_json_schema()
@@ -55,5 +61,6 @@ class KafkaSink:
         try:  # pragma: no cover - network interaction
             headers = [("schema-hash", self.schema_hash.encode("utf-8"))]
             self.producer.send(self.topic, payload, headers=headers)
+            self._counter.labels(self.topic).inc()
         except Exception as exc:
             logger.error("Kafka publish failed: %s", exc)

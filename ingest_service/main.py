@@ -1,8 +1,12 @@
+import logging
 import os
 import re
+
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
+from pythonjsonlogger import jsonlogger
 
+from gutumanu.logging import OpenSearchHandler, PIIFilter
 from rules import RuleEngine, parse_rules
 from rules import db as rules_db
 
@@ -11,7 +15,48 @@ from .kafka import KafkaSink
 from .rate_limit import RateLimiter
 from .schemas import TelemetryV1, TripV1
 
+try:  # pragma: no cover - optional observability hooks
+    from prometheus_fastapi_instrumentator import Instrumentator
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if endpoint:
+        resource = Resource.create({"service.name": "ingest_service"})
+        provider = TracerProvider(resource=resource)
+        processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint))
+        provider.add_span_processor(processor)
+        trace.set_tracer_provider(provider)
+    else:  # pragma: no cover
+        FastAPIInstrumentor = None  # type: ignore
+except Exception:  # pragma: no cover
+    Instrumentator = None  # type: ignore
+    FastAPIInstrumentor = None  # type: ignore
+
 app = FastAPI()
+
+if 'Instrumentator' in globals() and Instrumentator:  # pragma: no cover - optional pkg
+    Instrumentator().instrument(app).expose(app)
+    try:
+        FastAPIInstrumentor.instrument_app(app)
+    except Exception:
+        pass
+
+formatter = jsonlogger.JsonFormatter()
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+stream_handler.addFilter(PIIFilter())
+root_logger.addHandler(stream_handler)
+os_handler = OpenSearchHandler()
+os_handler.setFormatter(formatter)
+os_handler.addFilter(PIIFilter())
+root_logger.addHandler(os_handler)
 
 RATE_LIMIT_RATE = float(os.getenv("RATE_LIMIT_RATE", "5"))
 RATE_LIMIT_CAPACITY = int(os.getenv("RATE_LIMIT_CAPACITY", "10"))
