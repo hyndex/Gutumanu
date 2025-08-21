@@ -1,0 +1,9 @@
+name: gutumanu_analytics
+version: 1.0.0
+profile: default
+config-version: 2
+
+models:
+  gutumanu_analytics:
+    marts:
+      +materialized: table
