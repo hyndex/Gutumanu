@@ -1,6 +1,11 @@
 from rest_framework import viewsets
-from .models import LocationLog, GeofenceAlert, AIJob
-from .serializers import TelemetrySerializer, AlertSerializer, AIJobSerializer
+from .models import LocationLog, GeofenceAlert, AIJob, InferenceRun
+from .serializers import (
+    TelemetrySerializer,
+    AlertSerializer,
+    AIJobSerializer,
+    InferenceRunSerializer,
+)
 
 
 class TelemetryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -16,3 +21,8 @@ class AlertStreamViewSet(viewsets.ReadOnlyModelViewSet):
 class AIJobViewSet(viewsets.ModelViewSet):
     queryset = AIJob.objects.all().order_by('-created_at')
     serializer_class = AIJobSerializer
+
+
+class InferenceRunViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = InferenceRun.objects.all().order_by('-created_at')
+    serializer_class = InferenceRunSerializer
