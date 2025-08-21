@@ -1,12 +1,18 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .viewsets import TelemetryViewSet, AlertStreamViewSet, AIJobViewSet
+from .viewsets import (
+    TelemetryViewSet,
+    AlertStreamViewSet,
+    AIJobViewSet,
+    InferenceRunViewSet,
+)
 
 router = DefaultRouter()
 router.register(r'telemetry', TelemetryViewSet, basename='telemetry')
 router.register(r'alerts', AlertStreamViewSet, basename='alerts')
 router.register(r'aijobs', AIJobViewSet, basename='aijob')
+router.register(r'inference-runs', InferenceRunViewSet, basename='inference-run')
 
 urlpatterns = [
     path('placeholder/', views.landing, name='landing'),

@@ -637,3 +637,18 @@ class AIJob(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.status})"
+
+
+class InferenceRun(models.Model):
+    """Records statistics for a model inference execution."""
+
+    job = models.ForeignKey(AIJob, on_delete=models.CASCADE, related_name="runs")
+    model_name = models.CharField(max_length=100)
+    score = models.FloatField()
+    latency_ms = models.FloatField()
+    accuracy = models.FloatField(null=True, blank=True)
+    drift = models.FloatField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return f"{self.model_name} run {self.id}"
