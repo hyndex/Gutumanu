@@ -71,6 +71,39 @@ services:
     volumes:
       - mlflow-data:/mlruns
 
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: analytics
+      POSTGRES_PASSWORD: analytics
+      POSTGRES_DB: analytics
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  connect:
+    image: debezium/connect:2.6
+    depends_on:
+      - redpanda
+      - postgres
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: redpanda:9093
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: debezium_connect_configs
+      OFFSET_STORAGE_TOPIC: debezium_connect_offsets
+      STATUS_STORAGE_TOPIC: debezium_connect_statuses
+      CONNECT_PLUGIN_PATH: /kafka/connect/plugins
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      S3_ENDPOINT: http://minio:9000
+    volumes:
+      - ./debezium:/kafka/connect/debezium-conf
+
 volumes:
   minio-data:
   mlflow-data:
+  postgres-data:
+  connect-data:
