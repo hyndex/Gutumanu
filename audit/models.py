@@ -15,11 +15,17 @@ class AuditLog(models.Model):
     body = EncryptedTextField(blank=True, default='', classification='PII')
     prev_hash = models.CharField(max_length=64, blank=True)
     hash = models.CharField(max_length=64, blank=True)
+    tsa_token = models.BinaryField(null=True, blank=True)
 
     class Meta:
         ordering = ['timestamp']
 
     def save(self, *args, **kwargs):
+        if self.pk:
+            update_fields = kwargs.get('update_fields')
+            if not update_fields or set(update_fields) != {'tsa_token'}:
+                raise ValueError("AuditLog entries are immutable")
+            return super().save(*args, **kwargs)
         if not self.prev_hash:
             last = AuditLog.objects.order_by('-timestamp').first()
             self.prev_hash = last.hash if last else ''
