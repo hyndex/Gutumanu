@@ -1,0 +1,12 @@
+version: 2
+
+exposures:
+  - name: orders_dashboard
+    type: dashboard
+    url: https://example.com/dashboards/orders
+    description: "Dashboard built from curated orders mart"
+    depends_on:
+      - ref('orders')
+    owner:
+      name: analytics
+      email: analytics@example.com
