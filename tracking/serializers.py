@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import LocationLog, GeofenceAlert, AIJob
+from .models import LocationLog, GeofenceAlert, AIJob, InferenceRun
 
 
 class TelemetrySerializer(serializers.ModelSerializer):
@@ -18,3 +18,9 @@ class AIJobSerializer(serializers.ModelSerializer):
     class Meta:
         model = AIJob
         fields = ['id', 'name', 'status', 'created_at', 'updated_at']
+
+
+class InferenceRunSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InferenceRun
+        fields = ['id', 'job', 'model_name', 'score', 'latency_ms', 'accuracy', 'drift', 'created_at']
